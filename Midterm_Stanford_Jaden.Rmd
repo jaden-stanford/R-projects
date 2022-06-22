@@ -1,0 +1,263 @@
+---
+title: Does natural language aptitude make it easier to learn how to code?
+author: Jaden Stanford
+date: February 28th, 2022
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: false
+    lightbox: true
+    gallery: false
+    highlight: tango
+    code_folding: hide
+---
+
+```{=html}
+<style>
+h1.title {
+  font-size: 30px;
+}
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 22px;
+}
+h3 { 
+  font-size: 18px;
+}
+
+</style>
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Article
+The [article](https://www.freecodecamp.org/news/how-learning-a-foreign-language-helps-you-learn-to-code-937e20b351f6/) I am using is by a man named Dylan Attal on the site freeCodeCamp.org. In the article, he talks about his journey to becoming a software developer, and how he came from a completely non-technical background in the humanities. He attributes his obsession with foreign language to his ability to learn code. He says that the similarities between learning a human language and a programming language can be summed up in two main points: the learning process and the learning mindset.
+
+##### The Learning Process
+Dylan describes how the processes through which you learn a spoken language and a programming language are similar. In the beginning, you start with the building blocks, like vocabulary words and syntax. Then, you begin to put words together, maybe without understanding grammar. He says this is similar to learning beginner code and how a simple function will return values in an array less than 50, even if you don't necessarily understand how or why the code is written the way it is. Then, you begin to learn syntax, and finally, you learn to speak or code like an expert.
+
+##### The Learning Mindset
+Dylan argues that it takes a certain mindset to excel as a language student - that you have to be eager to understand the world around you, willing to accept new information, and unafraid of making mistakes. He also discusses how a good language student can accept paradigm shifts and that standards and conventions are constantly changing and how you have to stay up to date. He says you need a similar mindset when learning to program.
+
+
+I chose this article because I am interested in the idea that being good at learning natural languages can help you learn programming languages. I think this is especially relevant because the typical 'good' programmer is often portrayed as someone who is very technical and good at math. I definitely think there is some similarities between learning a spoken language and a coding language, but I want to explore that relationship more. What if some of the best programmers aren't necessarily people who are very technical? I think that would probably change some of the ways we think about and teach learning to code, and might even change the types of people we as a society encourage to become computer scientists. 
+
+
+
+```{r, echo=FALSE}
+htmltools::tags$iframe(src = "How learning a foreign language helps you learn to code.html", width = 800, height = 500)
+```
+
+
+
+
+## Data Description 
+<img align="right" width="200" height="200" src="25421773.png">
+
+The [dataset](https://github.com/UWCCDL/ComputerWhisperers) I am using to explore this topic is from the University of Washington Cognition & Cortical Dynamics Laboratory, hosted on GitHub. The data is from an experiment that used an individual differences approach to test the hypothesis that learning modern programming languages resembles natural language learning in adulthood.
+Researchers there ran a laboratory learning experiment with 42 healthy young adults (26F, 18M), aged 18-35 with no previous programming experience. They taught the participants Python, which they chose because it is the fastest growing programming language in use, with more 'reader-friendly' philosophy and more linguistic relevance than other languages. The learning tool they gave to the participants was an online learning environment through Codecademy. To promote active learning in this environment, researchers asked them to report when and how they asked for help (hints, online forums, or solutions buttons), and required that they obtain a minimum of 50% accuracy on post-lesson quizzes before moving to the next lesson. Experimenters verified this through screen-sharing and screen capture data; additionally, mean first-pass performance was 80.6% on the quizzes, suggesting that participants were actively engaged in learning. 
+
+The researchers tested their hypothesis by conducting various tests on the participants both before and during/after their time learning Python. Prior to learning Python, the researchers investigated what factors might predict learning. They included factors known to relate to complex skill learning __(fluid reasoning ability, working memory, inhibitory control)__ as well as __numeracy__, the mathematical equivalent of literacy, and __language aptitude__ as assessed by the Modern Language Aptitude Test. Researchers also used a neuropsychometric approach and looked at individual brain functioning as well as general cognitive ability, which they measured through 3 behavioral sessions and a resting-state electroencephalography (rsEEG).
+After the learning program, the partcipants' ability to learn Python was assessed using 3 outcomes: __(1): Learning rate__ - the slope of a regression line to fit lesson data obtained from each session; __(2): Programming accuracy__ - based on code produces by learners after training to produce a Rock-Paper-Scissors game, which was assessed and graded by 3 expert programmers; and __(3): Declarative Knowledge__ - total accuracy on a 50-item multiple choice test, with 25 questions on functions or semantic knowledge, and 25 questions on syntax.
+
+Below is the first few rows of the dataset. In total, there are 36 rows and 16 columns. The variables in the last columns are all related to the rsEEG scans, which I will not be using for my main analysis.
+
+```{r}
+library(knitr)
+
+#reading in the data
+data_lan <- read.csv('Computer_Whisperers_Stepwise_Regression_Data_for_pub.csv')
+data <- as.data.frame(data_lan)
+
+#data table for easy viewing
+kable(data[1:8,],)
+
+```
+
+
+
+## Data Validation 
+
+This data set is ideal for the investigation into how natural language aptitude affects learning programming languages. It includes several predictive variables that will be helpful in looking at how certain cognitive dispositions affect learning code, and also includes different metrics to measure how well someone learned to code. I also like how this data was gathered in a more controlled environment (experiment setting), as this may help to limit some confounding variables. 
+
+By looking at the variable types, I can see that each type is appropriate and within the range that it should be based on the scale the researchers used to measure each variable.
+
+
+```{r, message = FALSE, warning = FALSE}
+library(dplyr)
+library(tidyr)
+
+#looking at each variable and type
+str(data)
+
+#dropping values that have NA in Numeracy column
+data <- data %>% drop_na(Numeracy)
+
+
+
+```
+
+I looked at the data and saw that there were NA values only in one major variable column, for numeracy. So, I removed the rows with NA values in that column. There are some NA values for the rsEEG data, but I won't remove those rows because I will not be using that data. There are some duplicate values in the data as well, but there is no need to remove them as some participants may have scored identical values for some of the variables. 
+
+
+## Exploration 
+
+
+### Predictive Variable Distribution
+
+First, I wanted to look at the distribution the participants had for some of the predictive variables before they learned Python.
+
+```{r, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7}
+
+par(mfrow = c(2,2))
+
+hist(data$Numeracy, seq(0, 1, by = .1), xlab = 'Numeracy', main = 'Numeracy Distribution', col = colors()[544])
+hist(data$Language_Aptitude, seq(20, 100, by = 5), xlab = 'Language Apititude', main = 'Language Apititude Distribution', col = colors()[399])
+hist(data$Fluid_Intelligence, seq(5, 18, by = 1), xlab = 'Fluid Intelligence', main = 'Fluid Intelligence Distribution', col = colors()[101])
+hist(data$Working_Memory_Span, seq(-2, 2, by = .5), xlab = 'Working Memory Span', main = 'Working Memory Span Distribution', col = colors()[12])
+
+
+
+
+```
+
+There appears to be a varied distribution of all of the predictive variables, which is ideal for the dependent variables to be able to show the results of different levels of these predictive variables on the learning outcomes.
+<br />
+<br />
+<br />
+Next, I wanted to look at the learning rate to get a sense of if there were individual differences. I did this by plotting all of the learning rates as the slopes of lines, which is how learning rate was calculated in the experiment.
+
+```{r}
+plot(data$Learning_Rate, xlim = c(0,1), ylim = c(0,1.8), ylab = "Python Learning Rate",xlab = "", main = "Differences in Python Learning Rates")
+
+for (i in 1:31) {
+  b = 541
+  abline(a = 0, b = data[i,1], col = colors()[b+i])
+}
+
+```
+There is a spread of different learning rates, indicating that the testing was successful in detecting individual differences in the outcome variables. 
+
+
+<br />
+<br />
+
+Next, I wanted to start looking at how the predictive variables correlated with some of the learning outcome variables. First, I will look at how language aptitude vs. numeracy correlated with learning rate, programming accuracy, and declarative knowledge.
+
+<br />
+<br />
+
+### Language Aptitude vs. Numeracy as a Predictor of Learning Rate
+
+```{r,warning = FALSE, message = FALSE,out.width='200%', fig.height=5, fig.align="center"}
+library(gridExtra)
+library(ggplot2)
+library(ggpubr)
+
+#first plot
+p1 <- ggplot(data, aes(x=Numeracy, y = Learning_Rate)) + geom_point(col = colors()[544]) + labs(x = "Numeracy", y = "Python Learning Rate", title = "Numeracy vs. Learning Rate") + geom_smooth(method = "lm", formula = y ~ x, se = F, color = "black") + geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw()+         stat_regline_equation(label.x=0.5, label.y=1.50) 
+
+#second plot
+p2 <- ggplot(data, aes(x=Language_Aptitude, y = Learning_Rate)) + geom_point(col = colors()[399]) + labs(x = "Language Aptitude", y = "Python Learning Rate", title = "Language Aptitude vs. Learning Rate") + geom_smooth(method = "lm", formula = y ~ x, se = F, color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) +  theme_bw() +         stat_regline_equation(label.x=30, label.y=1.50) 
+
+#arranging plot output
+grid.arrange(p1, p2, nrow = 1)
+```
+These first graphs show how two of the main predictor variables, numeracy and language aptitude, affect the learning rate of participants. Non-linear and linear regression lines are shown. Both graphs show that the two variables are positively correlated; however, the correlation between language aptitude and learning rate appears to be slightly stronger. 
+
+<br />
+<br />
+<br />
+
+### Language Apititude vs. Numeracy as a Predictor of Programming Accuracy
+
+```{r,warning = FALSE, message = FALSE,out.width='200%', fig.height=5, fig.align="center"}
+
+p3 <- ggplot(data, aes(x=Numeracy, y = Programming_Accuracy)) + geom_point(col = colors()[544]) + labs(x = "Numeracy", y = "Programming Accuracy", title = "Numeracy vs. Programming Accuracy") + geom_smooth(method = "lm", formula = y ~ x, se = F,  color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=0.5, label.y=.8) 
+
+p4 <- ggplot(data, aes(x=Language_Aptitude, y = Programming_Accuracy)) + geom_point(col = colors()[399]) + labs(x = "Language Aptitude", y = "Programming Accuracy", title = "Language Aptitude vs. Programming Accuracy") + geom_smooth(method = "lm", formula = y ~ x, se = F,  color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +          stat_regline_equation(label.x=30, label.y=.8) + theme(plot.title=element_text(size=12)) #change font size of plot title
+
+grid.arrange(p3, p4, nrow = 1)
+```
+These graphs show how numeracy and language aptitude affect the programming accuracy of participants. Non-linear and linear regression lines are shown. Both graphs show that the two variables are positively correlated; however, the correlation between language aptitude and programming accuracy appears to be slightly stronger. The slope for numeracy look higher in all examples, but this is due to scaling differences.
+<br />
+<br />
+<br />
+
+### Language Apititude vs. Numeracy as a Predictor of Declarative Knowledge
+
+```{r,warning = FALSE, message = FALSE,out.width='200%', fig.height=5, fig.align="center"}
+p1 <- ggplot(data, aes(x=Numeracy, y = Declarative_Knowledge)) + geom_point(col = colors()[544]) + labs(x = "Numeracy", y = "Declarative Knowledge", title = "Numeracy vs. Declarative Knowledge") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=0.5, label.y=1.00)  
+    
+p2 <- ggplot(data, aes(x=Language_Aptitude, y = Declarative_Knowledge)) + geom_point(col = colors()[399]) + labs(x = "Language Aptitude", y = "Declarative Knowledge", title = "Language Aptitude vs. Declarative Knowledge") + geom_smooth(method = "lm", formula = y ~ x, se = F, color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() + theme(plot.title=element_text(size=12)) #change font size of plot title
+
+grid.arrange(p1, p2, nrow = 1)
+```
+These graphs show how numeracy and language aptitude affect the declarative knowledge of participants. Non-linear and linear regression lines are shown. Both graphs show that the two variables are positively correlated; however, the correlation between language aptitude and declarative knowledge appears to be slightly stronger. 
+<br />
+<br />
+<br />
+
+All 3 sets of these graphs show that both numeracy and language aptitude are positively correlated with the 3 learning outcome variables. However, for all 3 dependent variables, the correlation with language aptitude may be slightly stronger. 
+
+<br />
+<br />
+
+### Fluid Reasoning vs Outcome Variables
+
+Next, I wanted to look at how some of the other predictor variables related to complex skill learning and how they affected the outcome of learning Python. First, I chose to look at fluid reasoning, which is a measure of the capacity to think logically and solve problems.
+
+```{r,warning = FALSE, message = FALSE,out.width='210%', fig.height=5, fig.align="center"}
+p1 <- ggplot(data, aes(x=Fluid_Intelligence, y = Learning_Rate)) + geom_point(col = colors()[101]) + labs(x = "Fluid Intelligence", y = "Learning Rate", title = "Fluid Intelligence vs. Learning Rate") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=8, label.y=1.50)  + theme(plot.title=element_text(size=9)) #change font size of plot title
+    
+p2 <- ggplot(data, aes(x=Fluid_Intelligence, y = Programming_Accuracy)) + geom_point(col = colors()[101]) + labs(x = "Fluid Intelligence", y = "Programming Accuracy", title = "Fluid Intelligence vs. Programming Accuracy") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=8, label.y=.80)  + theme(plot.title=element_text(size=9)) #change font size of plot title
+
+p3 <- ggplot(data, aes(x=Fluid_Intelligence, y = Declarative_Knowledge)) + geom_point(col = colors()[101]) + labs(x = "Fluid Intelligence", y = "Declarative Knowledge", title = "Fluid Intelligence vs. Declarative Knowledge") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=8, label.y=.85)  + theme(plot.title=element_text(size=8)) #change font size of plot title
+
+grid.arrange(p1, p2, p3, nrow = 1)
+```
+As shown in the above plots, fluid reasoning apears to be strongly correlated with each of the 3 outcome variables. This makes sense, as problem solving is a central part of coding and learning how to code. 
+
+<br />
+<br />
+
+
+### Working Memory vs. Outcome Variables
+
+Next, I wanted to look at working memory span, which is a measure of short-term memory and the capacity to simultaneously store and process new information. Memory is important to learning, so I think this is an interesting variable to look at. 
+
+```{r,warning = FALSE, message = FALSE,out.width='210%', fig.height=5, fig.align="center"}
+p1 <- ggplot(data, aes(x=Working_Memory_Span, y = Learning_Rate)) + geom_point(col = colors()[12]) + labs(x = "Working Memory Span", y = "Learning Rate", title = "Memory vs. Learning Rate") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=-2, label.y=1.50)  + theme(plot.title=element_text(size=12)) #change font size of plot title
+    
+p2 <- ggplot(data, aes(x=Working_Memory_Span, y = Programming_Accuracy)) + geom_point(col = colors()[12]) + labs(x = "Working Memory Span", y = "Programming Accuracy", title = "Memory vs. Programming Accuracy") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=-2, label.y=.80)  + theme(plot.title=element_text(size=9)) #change font size of plot title
+
+p3 <- ggplot(data, aes(x=Working_Memory_Span, y = Declarative_Knowledge)) + geom_point(col = colors()[12]) + labs(x = "Working Memory Span", y = "Declarative Knowledge", title = "Memory vs. Declarative Knowledge") + geom_smooth(method = "lm", formula = y ~ x, se = F,color = "black")+ geom_smooth(method = "loess", color = "gray", formula = y ~ x, se = F, span = 3) + theme_bw() +         stat_regline_equation(label.x=-2, label.y=.85)  + theme(plot.title=element_text(size=10)) #change font size of plot title
+
+grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+Interestingly, the working memory span graphs show different trends than the other graphs. While there is a positive correlation between memory and learning rate and a memory and programming accuracy, there is not really a correlation between memory and declarative knowledge. Declarative knowledge was the score of the participants on a test after they learned Python. This might be beacuse working memory span is an indicator of short term memory, and not necessarily one's ability to recall information in the long term; however, there could be many different possibilities for this result. 
+
+<br />
+<br />
+
+## Conclusions & Limitations
+
+The exploratory graphs showed that there were individual differences detected before and after learning Python, which validates the use of this data. All of the graphs show that predictive variables numeracy and language aptitude were strong predictors of ability to learn code, measured by learning rate, programming accuracy, and declarative knowledge. Fluid intelligence was also a strong predictor of all 3 outcome variables. However, working memory span did not show a strong correlation with declarative knowledge. The results of this analysis indicate that having a high aptitude for learning languages might be more important in learning how to code than being good with numbers and math, or at least it is just good at predicting learning outcome. 
+
+There are a few limitations to this study and its conclusions. First,  I think it is hard to categorize and measure people's cognitive ability based on simple tests. I'm not sure how accurate the tests used are, or if different tests might have yielded different results. Another potential limitation is that I did not fully explore some of the other predictor variables like working memory updating,inhibitory control, and the rsEEG data. It is likely that not all of those variables have the same positive correlation with the learning outcome variables. In addition, the sample size for this experiment was relatively small. Stronger results could be obtained by repeating this experiment, perhaps with a larger sample size. It would also be interesting to see how this experiment would go if the participants were learning in a different way, maybe face-to-face classroom instruction, or even maybe learning a different programming language.
+
+
+### References 
+
+- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1751478/
+- https://github.com/UWCCDL
+- https://www.nature.com/articles/s41598-020-60661-8
+
+
+
+

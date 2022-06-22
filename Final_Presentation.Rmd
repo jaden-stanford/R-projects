@@ -1,0 +1,534 @@
+---
+title: "What is the 'Best' Dog Breed for You?"
+author: "Jaden Stanford"
+date: "4/20/2022"
+output:
+     html_document:
+          toc: TRUE
+          toc_depth: 4
+          toc_float: true
+          toc_collapsed: true
+          theme: cosmo
+          code_folding: hide
+runtime: shiny
+---
+
+<!--- Change font size for headers --->
+<style>
+h1.title {
+  font-size: 40px;
+}
+h1 {
+  font-size: 35px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 { 
+  font-size: 25px;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, 
+                      fig.align="center", out.width="80%")
+```
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+#loading required libraries
+library(dplyr)
+library(ggplot2)
+library(gganimate)
+library(tidyr)
+library(tidyverse)
+library(reshape2)
+library(ggrepel)
+library(shiny)
+library(shinythemes)
+library(plotly)
+```
+
+# Introduction
+
+```{r, echo = FALSE, out.height = '300px', out.width = '350px', out.extra = 'style = "float:right;padding:10px"'}
+knitr::include_graphics('Pets.jpg')
+```
+
+
+Almost every person and family I know has some kind of pet, whether its a dog, cat, bird, fish, or something else. I myself grew up with dogs in the family, and most of my friends have either dogs or cats. Reports reveal that pet ownership is the U.S. is extremely common. According to the 2021-2022 National Pet Owners Survey, 70% of U.S. households, or 90.5 million families, own a pet. This is an increase from 56% of households in 1988 when the survey was first conducted. 
+
+I do plan on adopting a dog sometime in the future, but I am not decided on what type of breed yet. I know there is a lot of factors that go into selecting a dog breed, including size, cost, cuteness, obedience, shedding, temperament, and more. I decided to look into research on different types of dogs and what might be important when selecting what type of dog is right for you. 
+
+
+## Article
+
+The [article](https://www.inverse.com/science/which-breeds-of-dogs-are-the-most-independent) I found comes from Inverse.com, and is a blog-style post about what dog breed might be the best for you. The author Tara writes about how Inverse spoke to pet experts to gather advice on what factors to consider when choosing a dog, as breed is an important choice to finding a dog that will match your lifestyle. The article suggests that some dog owners' personalities will be more compatible with certain groups of dogs, and that there are studies that have found a correlation between dog breeds and behavior.
+
+<br/>
+
+```{r, echo=FALSE}
+htmltools::tags$iframe(src = "final-article.html", width = 800, height = 500)
+```
+
+<br/>
+
+Dog breeds belong to different categories, as the article notes. These categories are:
+
+* __Sporting__ - These breeds historically have assisted hunters in capturing and retrieving birds.They often have thick, water-repellent coats. Examples include the Labrador Retriever and the German Shorthaired Pointer.
+
+```{r, echo = FALSE}
+knitr::include_graphics('sporting.jpg')
+```
+<br/>
+
+* __Hound__ - These breeds were meant to pursue bigger game during hunting. The are often very fast or have very powerful senses of smell and a strong prey drive. Examples include the Dachshund, Greyhound, and Bloodhound. 
+
+```{r, echo = FALSE}
+knitr::include_graphics('hound.jpg')
+```
+<br/>
+
+* __Working__ - This group includes some of the most ancient breeds, who were bred to assist humans in some capacity, like pulling sleds or guarding homes. Many are still used as working dogs today and are known for their size, strength, and intelligence. Exampes include the Boxer and Great Dane.
+
+```{r, echo = FALSE}
+knitr::include_graphics('working.jpg')
+```
+<br/>
+
+* __Terrier__ - These dogs are short-legged and spirited and were originally bred to go underground to pursue rodents. Examples include the Bull Terrier and the Scottish Terrier.  
+
+```{r, echo = FALSE}
+knitr::include_graphics('terrier.jpg')
+```
+<br/>
+
+* __Toy__ - These breeds are specifically for human companionship, and are known for being attentive and affectionate. They are usually smaller. Examples include the Pug and Chihuahua. 
+
+```{r, echo = FALSE}
+knitr::include_graphics('toy.jpg')
+```
+<br/>
+
+* __Herding__ - Herding dogs move livestock like sheet and cattle, and work closely with human shepherds. They have high natural intelligence and responsiveness and are therefore highly trainable. Examples include the Border Collie and German Shepherd. 
+
+```{r, echo = FALSE}
+knitr::include_graphics('herding.jpg')
+```
+<br/>
+
+* __Non-sporting__ - These dogs category is kind of a patchwork of breeds who do not fit into any of the other categories, although they were all developed for human interaction in some capacity. Examples include the Bulldog and Poodle. 
+
+```{r, echo = FALSE}
+knitr::include_graphics('non-sporting.jpg')
+```
+
+<br/>
+
+The article made some connections between breeds and behaviors. For example, it states that working dogs and herding dogs tend to be more independent. Toy dogs are generally more family-friendly, while more highly-active breeds are less likely to do well when left alone and confined. Terriers and retrievers tend to be more family-friendly and sociable as well. However, something the article points out is that regardless of behavioral trends for a dog breed, the dog's environment and training will also be very important and perhaps more important in determining their behavior.
+
+<br/>
+
+## Dataset
+
+It was a bit hard to find a dataset that looked at a lot of different dogs and their behavioral traits and characteristics, but eventually I found a dataset compiled by the site Information is Beautiful, which is kind of like Kaggle. The dataset is called "Best in Show" but includes information for different breeds like size, cost, popularity, intelligence, trainability, longevity, and more. I liked that this dataset discussed all of its sources, so I could be reasonably confident that the statistics were usable. For example, they sourced and compiled data from the American Kennel Club, academic papers, databases. I also found a dataset from the American Kennel Club that has the Westminster dog winners each year from 1907 - 2017, because I thought this could potentially give insight on the best dog breeds as well.
+
+The variables in the Best in Show dataset I am most interested in are:
+
+* _breed_ - the specific breed of the dog
+* _category_ - the group category of the dog (herding, sporting, etc.)
+* _popularity_ - popularity ranking from American Kennel Club registrations
+* _lifetime cost_ - estimated lifetime cost of owning this dog
+* _purchase price_ - initial purchase price
+* _yearly food cost_ - how much money it costs to provide food for them every year
+* _grooming_ - amount of grooming required, higher numbers indicate less grooming
+* _kids score_ - how suitable this dog is for kids, 1 = highly suitable
+* _intelligence_ - intelligence ranking (easiest to train and fastest to learn new commands)
+* _first command_ - percent of time they listen to your first command
+* _combined score_ - combined rating based on intelligence, logevity, ailments, cost, grooming, and kids
+
+
+
+<br/>
+
+# Data Validation
+
+## Cleaning Datasets {.tabset}
+
+I had to modify the datasets a little so I could use them, especially the 'Best in Show' dataset. 
+
+### Initial Reads
+
+First, I downloaded the data from the online sources as csvs and read them in. I had to drop some extraneous rows in the Best in Show dataset and rename a lot of columns as well. 
+
+```{r, warning = FALSE, message = FALSE}
+#reading in westminster data
+westminster <- read.csv("Best_in_show_westminster.csv", header = TRUE)
+
+#reading in bis data
+bis <- read.csv('best-in-show-full.csv',  skip = 2)
+
+#remove first row as it contains comments
+bis <- bis[-c(1),]
+
+#removing extraneous columns and columns where all NA
+bis <- bis[c(1,3,5,6,8,11,13,15,17, 19, 21,23,26,29,32,41,43)]
+
+#renaming columns 
+names(bis)[names(bis) == 'Sources...see.bottom.right'] <- 'breed'
+names(bis)[names(bis) == 'POPULARITY.IN.US'] <- 'popularity'
+names(bis)[names(bis) == 'LIFETIME.COST...'] <- 'lifetime_cost'
+names(bis)[names(bis) == 'X1.INTELLIGENCE..TRAINABILITY..ranking'] <- 'intelligence_ranking'
+names(bis)[names(bis) == 'X2.LONGEVITY'] <- 'lifespan'
+names(bis)[names(bis) == 'X3.NO..OF.GENETIC.AILMENTS'] <- 'num_ailments'
+names(bis)[names(bis) == 'X4a.average.purchase.price..US.'] <- 'purchase_price'
+names(bis)[names(bis) == 'X4b.food.costs.per.year..US.'] <- 'yearly_food_cost'
+names(bis)[names(bis) == 'X5a.grooming.required'] <- 'grooming'
+names(bis)[names(bis) == 'X5b.suitability.for.children'] <- 'kids_score'
+names(bis)[names(bis) == 'obey.first.command....of.time.'] <- 'first_command'
+names(bis)[names(bis) == 'intelligence.category'] <- 'intelligence_category'
+names(bis)[names(bis) == 'ULTIMATE.TOP.DOG.MEGA.SCORE..with.kids.'] <- 'combined_score'
+
+
+bis <- bis[-c(135,145),]
+
+str(westminster)
+
+str(bis)
+
+```
+
+
+
+### Checking for NAs and Unique
+
+After looking at the data, I can see that there is a mix of 'NA', '-', and 'no data' all used to represent NA, so I will change all of those values to NA. I won't remove any rows for NA values yet, but will do so on a case by case basis later depending on what variables I am using. 
+
+```{r, warning = FALSE, message = FALSE}
+#strings to replace with NA
+
+bis <- bis %>% dplyr::na_if("no data")
+bis <- bis %>% dplyr::na_if("-")
+bis <- bis %>% dplyr::na_if("")
+```
+
+
+
+
+### Changing values of data
+
+All of the data in the Westminster set is appropriate for the type, but I will change a couple variable types for the Best in Show data Set. I will change popularity, lifetime_cost, intelligence_ranking, lifespan, purchase price, yearly_food_cost, the dog mega scores, and first_command to numbers instead of characters. I will category, change grooming, size.category, intelligence_category, and kids_score to a factor. 
+
+```{r, warning = FALSE, message = FALSE}
+#removing symbols from data so as.numeric does not produce error
+bis$lifetime_cost = gsub("\\$", "", bis$lifetime_cost)
+bis$lifetime_cost = gsub(",", "", bis$lifetime_cost)
+bis$purchase_price = gsub("\\$", "", bis$purchase_price)
+bis$yearly_food_cost = gsub("\\$", "", bis$yearly_food_cost)
+bis$first_command = gsub(">", "", bis$first_command)
+
+
+#changing columns to numeric
+bis[, c(4,5, 6, 7, 9, 10, 13, 14, 17)] <- sapply(bis[, c(4,5, 6, 7, 9, 10, 13, 14, 17)], as.numeric)
+
+#changing columns to factor
+bis$category <- as.factor(bis$category)
+bis$grooming <- as.factor(bis$grooming)
+bis$size.category <- as.factor(bis$size.category)
+bis$intelligence_category <- as.factor(bis$intelligence_category)
+bis$kids_score <- as.factor(bis$kids_score)
+
+  
+str(bis)
+summary(bis)
+```
+
+
+<br/>
+
+
+# Analysis
+
+
+## Cost Consideration 
+
+First, I wanted to take cost into consideration. It's always good to know what you're getting into with finances when you buy a pet, and it'll be a commitment for the next decade at least.  I know some dogs can be pretty expensive, but it's also important to take into consideration how much money you would need to take care of the pet every year as well. 
+
+
+```{r, warning = FALSE, message = FALSE}
+
+ui <- fluidPage( theme = shinytheme('cosmo'),
+  
+  # App title ----
+  titlePanel("Cost Considerations for Top 30 Dog Breeds"),
+  sidebarLayout(
+  
+  # Sidebar panel for inputs ----
+  sidebarPanel(width = 3,
+      selectInput(inputId = "variable", label = "Variable:",
+              c("Lifetime Cost" = "lifetime_cost", "Purchase Price" = "purchase_price","Yearly Food Cost" = "yearly_food_cost"),
+              selected = "lifetime_cost")),
+  
+  # Main panel for displaying outputs ----
+  mainPanel(
+    plotOutput("costPlot")
+  
+)
+)
+)
+
+# Define server logic to plot various variables against mpg ----
+server <- function(input, output) {
+  
+  #subset top 15 most popular dog breeds
+list <- 1:30
+top30 <- subset(bis, popularity %in% list)
+top30 <- na.omit(top30)
+
+  
+  output$costPlot <- renderPlot ({
+
+  ggplot(data = top30, aes(x = breed, y= (!!rlang::sym(input$variable)), fill = breed)) + geom_bar(stat = 'identity', show.legend = FALSE) + labs(x = 'Breed', y = sprintf("%s", input$variable), title = sprintf("%s for Top 30 Most Popular Dog Breeds", input$variable)) + theme(axis.text.x = element_text(angle = 90)) 
+  }, height = 400, width = 600)
+
+  
+}
+
+shinyApp(ui, server, options = list(height = 500))
+```
+
+
+This Shiny app looks at lifetime cost, initial purchase price, and yearly food cost for the Top 30 most popular dog breeds according to the American Kennel Club. While there is not a huge variation in lifetime cost, the Chihuahua and German Shorthaired Pointer have the highest lifetime cost, while the Boxer has the lowest. The Golden Retriever and Poodle have the highest initial purchase price. By far, the most expensive yearly food cost is for the German Shorthaired Pointer. This actually makes sense because the GSP is a hunting dog. I have a friend who has a GSP, and he definitely is extremely active, requires a lot of exercise, and eats a lot. Overall, maybe the GSP is the popular dog to avoid if you don't want to be spending a ton of money on your dog every year!
+
+
+<br/>
+
+## Intelligence, Obedience, and Family 
+
+Next, I wanted to look at intelligence, obedience, and suitability for kids by breed category. These both would influence how easy of a time you would have training your dog after you first get them. Intelligent dogs also probably tend to get along better with families and other animals, which could also be important. 
+
+
+```{r, warning = FALSE, message = FALSE}
+
+ui <- navbarPage("Intelligence, Obedience, and Family",
+  tabPanel("Intelligence",
+   mainPanel(
+     plotOutput("p1")
+   )
+  ),
+ tabPanel("Obedience",
+    mainPanel(
+     plotOutput("p2")
+    )
+  ),
+ tabPanel("Family Friendly",
+    mainPanel(
+     plotOutput("p3")
+    )
+  )
+ )        
+
+
+server <- function(input, output){
+    
+    output$p1 <- renderPlot({
+    ggplot(data = bis, aes(x = category, y = intelligence_ranking, fill = category)) + geom_violin(trim = FALSE) + theme_bw() + labs(title = "Intelligence by Breed Category") + theme(axis.text.x = element_text(size = 15)) + theme(plot.title = element_text(size = 20, hjust = 0.5)) + theme(axis.title.x = element_text(size = 18, hjust = 0.5))+ scale_y_reverse() + scale_x_discrete(na.translate = FALSE)
+    }, height = 500, width = 800)
+    
+    output$p2 <- renderPlot({
+    ggplot(data = bis, aes(x = category, y = first_command, fill = category)) + geom_violin(trim = FALSE) + theme_bw() + labs(title = "Obedience by Breed Category") + theme(axis.text.x = element_text(size = 15)) + theme(plot.title = element_text(size = 20, hjust = 0.5)) + theme(axis.title.x = element_text(size = 18, hjust = 0.5)) + scale_x_discrete(na.translate = FALSE)
+    }, height = 500, width = 800)
+    
+    
+    output$p3 <- renderPlot({
+    ggplot(data = bis, aes(x = category, y = as.numeric(kids_score), fill = category)) + geom_violin(trim = FALSE) + theme_bw() + labs(title = "Kid Friendly by Breed Category") + theme(axis.text.x = element_text(size = 15)) + theme(plot.title = element_text(size = 20, hjust = 0.5)) + theme(axis.title.x = element_text(size = 18, hjust = 0.5)) + scale_y_reverse() + scale_x_discrete(na.translate = FALSE)
+    }, height = 500, width = 800)
+    
+}
+
+shinyApp(ui = ui, server = server, options = list(height = 600)) 
+```
+
+Thus graph specifically shows a lot of trends that support some of the points from the article. For intelligence, herding dogs have the highest distribution, followed by sporting. This makes sense given the tasks these dogs were bred for, like hunting and having to herd animals. They also both had to listen and interact with humans a lot. Toy, hound, and non-sporting have the lowest intelligence, and this also makes sense (hound perhaps less so). Toy dogs are just meant for human companionship and do not have any particular historical reason to be very intelligent. I thought hounds would be smarter, but maybe since they are kind of a 'brute force' hunting breed they are not as smart as some of the other groups. Toy is really the only group that is not kid friendly, which is something that I did not expect, and it doesn't necessarily agree with the article. Based on personal experience, I could agree with this finding, as I feel like some toy breeds are less intelligent and can tend to be meaner (Chihuahua and Bichon)
+
+
+## Best for Show?
+
+Next, I wanted to look at which dogs have actually won the Westminster Best in show title. If you wanted to get a dog to compete with, this would be the category to consider! However, looking at this also has merit generally because show dogs have to be relatively intelligent and obedient to compete properly. To do this, I used the Westminster dataset I mentioned earlier, and created an animated bar plot showing the cumulative wins of the top 15 breeds with the most wins since 1907. 
+
+
+```{r, warning = FALSE, message = FALSE}
+#creating cumulative data for wins for each breed 
+
+#finding top 15 breeds
+vals <- sort(table(westminster$Breed),decreasing=TRUE)[1:15]
+
+breed_names <- unique(westminster[c("Breed")])
+
+#combined all breeds
+westminster_wins_count <- data.frame(matrix(nrow = 111, ncol = 49))
+colnames(westminster_wins_count) <- breed_names$Breed
+rownames(westminster_wins_count) <- 1907:2017
+
+names <- colnames(westminster_wins_count)
+
+#removing not awarded columns
+westminster_wins_count = subset(westminster_wins_count, select = -c(9))
+
+
+#for loop to calculate cumulative win values
+for (i in 1:48) { #iterate through breed columns
+  for (j in 1:111) { #iterate through years
+    val = westminster_wins_count[j,i]
+    if (westminster[j,'Breed'] == names[i]) {
+      westminster_wins_count[j,i] = val + 1
+      westminster_wins_count[j:111,i] = val + 1
+    }
+    
+  }
+}
+  
+#top 15 breeds
+westminster_top15 <- data.frame(matrix(nrow = 111, ncol = 15))
+
+top15_names <- c("Fox Terrier (Wire)", "Scottish Terrier", "Spaniel (English Springer)", "Airedale Terrier", "Boxer", "Doberman Pinscher", "Fox Terrier (Smooth)", "Pekingese", "Poodle (Standard)", "Sealyham Terrier", "Pointer", "Pointer (German Shorthaired)", "Poodle (Miniature)" , "Afghan Hound","Beagle (15 Inch)")
+
+westminster_top15[is.na(westminster_top15)] = 0
+
+colnames(westminster_top15) <- top15_names
+
+
+for (i in 1:15) { #iterate through breed columns
+  for (j in 1:111) { #iterate through years
+    val = westminster_top15[j,i]
+    if (westminster[j,'Breed'] == top15_names[i]) {
+      westminster_top15[j,i] = val + 1
+      westminster_top15[j:111,i] = val + 1
+    }
+    
+  }
+}
+
+  
+#switching data from short to long format for overall cumulative
+westminster_wins_count <- cbind(year = 1907:2017, westminster_wins_count)
+rownames(westminster_wins_count) <- 1:nrow(westminster_wins_count)
+wins_long <- melt(westminster_wins_count, id.vars = c('year'))
+names(wins_long)[names(wins_long) == 'variable'] <- 'Breed'
+names(wins_long)[names(wins_long) == 'value'] <- 'Wins'
+
+#switching data from short to long format for top 15
+westminster_top15 <- cbind(year = 1907:2017, westminster_top15)
+wins15_long <- melt(westminster_top15, id.vars = c('year'))
+names(wins15_long)[names(wins15_long) == 'variable'] <- 'Breed'
+names(wins15_long)[names(wins15_long) == 'value'] <- 'Wins'
+
+```
+
+
+```{r}
+#animated plot showing winners of Westminster show 1907-2017
+#creating static plot
+p.static <- ggplot(wins15_long, aes(Wins, group = Breed,
+                fill = as.factor(Breed), color = as.factor(Breed)), show.legend = TRUE) +
+  geom_tile(aes(y = Wins/2,
+                height = Wins,
+                width = 10), alpha = 0.8, color = NA, position = position_dodge2(preserve = 'single', width = 10), show.legend = TRUE) + 
+  geom_text(aes(y = Wins, label = paste(Breed, " ")), position = position_dodge2(preserve = 'single', width = 10), size = 6, col = 'black')  + #adding labels to graph
+  geom_text(aes(y = Wins, label = paste(Wins, " ")),position = position_dodge2(preserve = 'single', width = 10), hjust = 7, size = 5, col = 'black') +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse()  +
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "topright",
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_line(size = 0.1, color = "grey"),
+        panel.grid.minor.x = element_line(size = 0.1, color = "grey"),
+        plot.title = element_text(size = 25, hjust = 0.5),
+        plot.subtitle = element_text(size=18, face = "italic", color = "grey",  hjust = 0.5, vjust = -1),
+        plot.background = element_blank(),
+        plot.margin = margin(2, 2, 2, 4, "cm"))
+#animation transition states
+anim <- p.static + 
+  transition_states(year, transition_length = 4, state_length = 1) +
+  view_follow(fixed_x = TRUE)  +
+  labs(title = 'Westminster Dog Show Wins by Breed since 1907 : Year {closest_state}', subtitle = 'Top 15 Breeds')
+
+animate(anim, 1000, fps = 20, width = 1200, height = 1000, 
+        renderer = gifski_renderer("gganim.gif"))
+```
+
+
+```{r, echo = FALSE, out.height = '175px', out.width = '250px', out.extra = 'style = "float:right;padding:10px"'}
+knitr::include_graphics('wire_terrier.jpg')
+```
+
+This animation shows that in the last century, the Wire Fox Terrier has had the most Best in Show wins at the Westminster show, followed by the Smooth Fox Terrier and the Spaniel. It does take a lot to win Best in Show, so maybe this ranking has some merit. A dog that wins 'Best in Show' has to make it through several previous rounds of competition, including winning 'Best in Breed' and 'First in Group.' They also have to be relatively obedient, as their trainers have them do a number of tasks during evaluation. 
+
+<br/>
+<br/>
+
+## Overall Ranking
+
+Next, I wanted to look at a score the researchers compiled for this dataset. They created an overall combined score for each breed using intelligence, longevity, number of ailments, cost scores, grooming, and kid friendliness. I decided to graph this against popularity to look at the trends. 
+
+```{r, out.width = 800}
+myvars <- c("breed", "category", "popularity", "combined_score")
+bis_overall <- subset(bis[myvars])
+bis_overall <- bis_overall[1:88,]
+bis_overall <- na.omit(bis_overall)
+p <- bis_overall %>%
+  ggplot(aes(x = popularity, y = combined_score, color = category, text = bis_overall$breed)) + geom_point()  + theme_bw() + ggtitle("Popularity vs. Combined Score") + ylab("Combined Score") + xlab("Popularity")  + theme(plot.title = element_text(size = 18, hjust = 0.5)) + theme(axis.title.x = element_text(size = 18, hjust = 0.5), axis.title.y= element_text(size = 18, hjust = 0.5 )) + scale_x_reverse()
+ggplotly(p)
+```
+
+From this graph, the 2 dogs with the best overall combined rankings are the Border Terrier and Cairn Terrier, but there are many other dogs ranked similarly. 
+
+
+# Conclusions and Limitations 
+
+I think most of my findings agree with the article as previously discussed, except for the finding that toy dogs are less suitable for kids. I compiled some of the other conclusions I was able to make below:
+
+<br/>
+__Most expensive__ : German Shorthaired Pointer & Chihuahua
+<br/>
+__Least expensive__ : Boxer & Boston Terrier
+<br/>
+__Most Family Friendly__ : Anything but Toy?
+<br/>
+__Most Intelligent and Obedient__ : Herding dogs (Border Collie, German Shepherd) and Sporting dogs (Labrador Retriever, GSP)
+<br/>
+__Best for Shows__ : Terrier (Fox Wire or Smooth)
+<br/>
+
+The biggest limitation is that this data is only based on generalities. There will definitely be individual differences in dogs of the same breed, as the environment and the way a dog is trained and cared for will have a much bigger effect on the dog than its breed. I would think of these findings more as the dog's potential 'baseline' traits, but not for certain. I think that it's also important to note this dataset only included purebred dogs, which limits the applicability because  there are many different kinds of popular mixed breed dogs today. Additionally, the Westminster competition is based around how close a dog is to its breeds standard of excellence, not necessarily the objectively 'best' dog. So the finding for best for shows might only be relevant if you were interested in being a dog breeder.
+
+
+### References 
+
+* https://www.washingtonpost.com/news/animalia/wp/2017/11/03/pets-arent-wonder-drugs-heres-why-we-love-them-anyway/
+
+* https://www.inverse.com/science/which-breeds-of-dogs-are-the-most-independent
+
+* https://www.iii.org/fact-statistic/facts-statistics-pet-ownership-and-insurance#:~:text=Seventy%20percent%20of%20U.S.%20households,and%2067%20percent%20in%202019.
+
+* https://www.akc.org/expert-advice/lifestyle/7-akc-dog-breed-groups-explained/
+
+* https://shiny.rstudio.com/articles/build.html
+
+* https://r-graph-gallery.com/boxplot.html
+
+* https://plotly.com/python/line-and-scatter/
+
+
+
+
+
